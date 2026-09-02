@@ -1,0 +1,46 @@
+name: Microsoft Store Freebies
+
+on:
+  schedule:
+    - cron: '7 * * * *'
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: microsoft-store-notifier
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Run Microsoft Store notifier
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: node mstore.freebies.js
+
+      - name: Save posted games
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add posted.json
+
+          if git diff --cached --quiet; then
+            echo "No changes to posted.json"
+          else
+            git commit -m "Update posted Microsoft Store games"
+            git push
+          fi
