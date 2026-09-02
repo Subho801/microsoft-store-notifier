@@ -5,9 +5,15 @@ const fs = require('fs');
 
 const WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
 
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-
 const POSTED_FILE = 'posted.json';
+
+const MICROSOFT_LOGO =
+  'https://raw.githubusercontent.com/Subho801/microsoft-store-notifier/main/assets/microsoft.png';
+
+const FOOTER_LOGO =
+  'https://raw.githubusercontent.com/Subho801/microsoft-store-notifier/main/assets/footer.png';
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 function sessionTokenFrom(cursor) {
   return Buffer.from(cursor, 'base64')
@@ -55,11 +61,12 @@ async function fetchPage(price, cursor, retries = 3) {
         };
       }
 
-      console.log(`HTTP ${res.status}, retrying...`);
+      console.log(`[HTTP ${res.status}] Retrying...`);
 
       await sleep(1000 * (i + 1));
     } catch (err) {
-      console.log(`Request error: ${err.message}`);
+      console.log(`[REQUEST ERROR] ${err.message}`);
+
       await sleep(1000 * (i + 1));
     }
   }
@@ -68,82 +75,6 @@ async function fetchPage(price, cursor, retries = 3) {
     status: 403,
     data: null,
   };
-}
-
-async function scanBucket(price, sink) {
-  console.log(`\nScanning ${price} bucket...`);
-
-  let { data } = await fetchPage(price, '');
-
-  if (!data) {
-    console.log(`Failed to fetch ${price} bucket.`);
-    return;
-  }
-
-  console.log(`First page: ${data.productsList.length}`);
-
-  data.productsList.forEach(p => {
-    sink.set(p.productId, p);
-  });
-
-  let token = sessionTokenFrom(data.cursor);
-  let offset = 20;
-  let refreshTries = 0;
-
-  while (offset < 10000 && refreshTries < 5) {
-    console.log(`Fetching ${price} offset ${offset}...`);
-
-    const {
-      status,
-      data: page,
-    } = await fetchPage(
-      price,
-      makeCursor(offset, token)
-    );
-
-    if (status === 400) {
-      console.log(
-        `Microsoft pagination limit reached at offset ${offset}.`
-      );
-      break;
-    }
-
-    if (!page) {
-      refreshTries++;
-
-      console.log(
-        `Page failed. Refreshing cursor (${refreshTries}/5)...`
-      );
-
-      await sleep(2000 * refreshTries);
-
-      const fresh = await fetchPage(price, '');
-
-      if (!fresh.data) {
-        continue;
-      }
-
-      token = sessionTokenFrom(fresh.data.cursor);
-      continue;
-    }
-
-    refreshTries = 0;
-
-    if (!page.productsList || page.productsList.length === 0) {
-      console.log('No more products.');
-      break;
-    }
-
-    page.productsList.forEach(p => {
-      sink.set(p.productId, p);
-    });
-
-    console.log(`  ${page.productsList.length} results`);
-
-    offset += 20;
-
-    await sleep(700);
-  }
 }
 
 function isPaidNowFree(p) {
@@ -164,6 +95,7 @@ function loadPosted() {
       fs.readFileSync(POSTED_FILE, 'utf8')
     );
   } catch {
+    console.log('[WARN] Could not read posted.json');
     return {};
   }
 }
@@ -175,11 +107,31 @@ function savePosted(posted) {
   );
 }
 
+function getGameImage(product) {
+  // Prefer poster art.
+  if (product.posterArtUrl) {
+    return product.posterArtUrl;
+  }
+
+  // Fallback to icon.
+  if (product.iconUrl) {
+    return product.iconUrl;
+  }
+
+  // Fallback to the images array.
+  const image = product.images?.find(
+    img => img.url
+  );
+
+  return image?.url || null;
+}
+
 async function sendDiscord(game) {
   if (!WEBHOOK_URL) {
     console.log(
-      'DISCORD_WEBHOOK_URL not set — skipping Discord notification.'
+      '[ERROR] DISCORD_WEBHOOK_URL is not set.'
     );
+
     return false;
   }
 
@@ -187,139 +139,285 @@ async function sendDiscord(game) {
     game.strikeThroughPrice ||
     `$${game.msrp}`;
 
-  const payload = {
-    embeds: [
-      {
-        title: '🎮 Microsoft Store — FREE',
-        description:
-          `**${game.title}**\n\n` +
-          `~~${oldPrice}~~ → **FREE**\n\n` +
-          `[Get it on Microsoft Store](${game.url})`,
-        fields: [
-          {
-            name: 'Original Price',
-            value: oldPrice,
-            inline: true,
-          },
-          {
-            name: 'Discount',
-            value: game.badgeText || '-100%',
-            inline: true,
-          },
-        ],
-        url: game.url,
-        footer: {
-          text: 'Microsoft Store Free Game',
-        },
-      },
-    ],
+  const embed = {
+    author: {
+      name: 'Microsoft Store - Free Deals',
+      icon_url: MICROSOFT_LOGO,
+    },
+
+    title: game.title,
+
+    url: game.url,
+
+    description:
+      `**Deal**\n` +
+      `~~${oldPrice}~~ **FREE** (${game.badgeText || '-100%'})`,
+
+    footer: {
+      text: "Subho's MS Store Freebie Informer",
+      icon_url: FOOTER_LOGO,
+    },
   };
 
-  const res = await fetch(WEBHOOK_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    console.log(
-      `Discord webhook failed: HTTP ${res.status}`
-    );
-    return false;
+  if (game.imageUrl) {
+    embed.image = {
+      url: game.imageUrl,
+    };
   }
 
-  console.log(`Discord notification sent: ${game.title}`);
-  return true;
+  const payload = {
+    embeds: [embed],
+  };
+
+  try {
+    const res = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+
+      headers: {
+        'Content-Type': 'application/json',
+      },
+
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      console.log(
+        `[DISCORD ERROR] HTTP ${res.status}`
+      );
+
+      return false;
+    }
+
+    console.log(
+      `[DISCORD] Sent: ${game.title}`
+    );
+
+    return true;
+  } catch (err) {
+    console.log(
+      `[DISCORD ERROR] ${err.message}`
+    );
+
+    return false;
+  }
 }
 
-async function main() {
-  const all = new Map();
+async function processProducts(products, posted) {
+  for (const p of products) {
+    if (!isPaidNowFree(p)) {
+      continue;
+    }
 
-  // IMPORTANT: Sale first
-  await scanBucket('Sale', all);
-
-  // Then Free
-  await scanBucket('Free', all);
-
-  console.log('\n================================');
-  console.log('TOTAL UNIQUE PRODUCTS');
-  console.log('================================');
-  console.log(all.size);
-
-  const deals = Array.from(all.values())
-    .filter(isPaidNowFree)
-    .map(p => ({
+    const game = {
       productId: p.productId,
       title: p.title,
       msrp: p.priceInfo.msrp,
       price: p.priceInfo.price,
       badgeText: p.priceInfo.badgeText,
-      strikeThroughPrice: p.priceInfo.strikeThroughPrice,
-      displayPrice: p.priceInfo.displayPrice,
+      strikeThroughPrice:
+        p.priceInfo.strikeThroughPrice,
+      displayPrice:
+        p.priceInfo.displayPrice,
+      imageUrl: getGameImage(p),
       url: `https://apps.microsoft.com/detail/${p.productId}`,
-    }));
+    };
 
-  console.log('\n================================');
-  console.log('TEMPORARILY FREE');
-  console.log('================================');
+    console.log(
+      `\n🎯 FOUND: ${game.title}`
+    );
 
-  if (deals.length === 0) {
-    console.log('No paid games currently free.');
-  } else {
-    deals.forEach(g => {
-      console.log(
-        `${g.title} — was ${
-          g.strikeThroughPrice || `$${g.msrp}`
-        } — ${g.url}`
-      );
-    });
-  }
+    console.log(
+      `   ${game.strikeThroughPrice || `$${game.msrp}`} → FREE`
+    );
 
-  fs.writeFileSync(
-    'result.json',
-    JSON.stringify(deals, null, 2)
-  );
-
-  // --------------------------------
-  // Discord / posted.json
-  // --------------------------------
-
-  const posted = loadPosted();
-
-  let newDeals = 0;
-
-  for (const game of deals) {
+    // Already sent previously.
     if (posted[game.productId]) {
       console.log(
-        `Already posted: ${game.title}`
+        `   Already posted — skipping.`
       );
+
       continue;
     }
 
+    // SEND IMMEDIATELY.
     const sent = await sendDiscord(game);
 
     if (sent) {
       posted[game.productId] = {
         title: game.title,
-        postedAt: new Date().toISOString(),
         msrp: game.msrp,
+        postedAt: new Date().toISOString(),
         url: game.url,
       };
 
-      newDeals++;
+      // Save immediately so a later crash
+      // doesn't cause duplicate notifications.
+      savePosted(posted);
     }
   }
+}
 
-  savePosted(posted);
+async function scanBucket(price, posted, stats) {
+  console.log(`\n========== ${price.toUpperCase()} ==========`);
+
+  let first = await fetchPage(price, '');
+
+  if (!first.data) {
+    console.log(
+      `[${price}] Failed to fetch first page.`
+    );
+
+    return;
+  }
+
+  let products = first.data.productsList || [];
+
+  stats.scanned += products.length;
 
   console.log(
-    `\nFound ${deals.length} paid games currently free.`
+    `[${price}] First page: ${products.length}`
+  );
+
+  // PROCESS IMMEDIATELY
+  await processProducts(products, posted);
+
+  let token = sessionTokenFrom(
+    first.data.cursor
+  );
+
+  let offset = 20;
+  let refreshTries = 0;
+
+  while (
+    offset < 10000 &&
+    refreshTries < 5
+  ) {
+    const result = await fetchPage(
+      price,
+      makeCursor(offset, token)
+    );
+
+    if (result.status === 400) {
+      console.log(
+        `[${price}] Microsoft pagination limit reached.`
+      );
+
+      break;
+    }
+
+    if (!result.data) {
+      refreshTries++;
+
+      console.log(
+        `[${price}] Refreshing cursor ` +
+        `(${refreshTries}/5)...`
+      );
+
+      await sleep(
+        2000 * refreshTries
+      );
+
+      const fresh = await fetchPage(
+        price,
+        ''
+      );
+
+      if (!fresh.data) {
+        continue;
+      }
+
+      token = sessionTokenFrom(
+        fresh.data.cursor
+      );
+
+      continue;
+    }
+
+    refreshTries = 0;
+
+    products =
+      result.data.productsList || [];
+
+    if (products.length === 0) {
+      console.log(
+        `[${price}] No more products.`
+      );
+
+      break;
+    }
+
+    stats.scanned += products.length;
+
+    // PROCESS THIS PAGE IMMEDIATELY.
+    await processProducts(
+      products,
+      posted
+    );
+
+    offset += 20;
+
+    // Less noisy than the old logger.
+    if (
+      offset % 200 === 0 ||
+      products.length < 20
+    ) {
+      console.log(
+        `[${price}] Offset ${offset} — ` +
+        `${stats.scanned} scanned`
+      );
+    }
+
+    await sleep(700);
+  }
+}
+
+async function main() {
+  console.log(
+    'Microsoft Store Freebie Informer'
   );
 
   console.log(
-    `New Discord notifications: ${newDeals}`
+    '================================'
+  );
+
+  if (!WEBHOOK_URL) {
+    console.log(
+      '[ERROR] DISCORD_WEBHOOK_URL is missing.'
+    );
+
+    process.exit(1);
+  }
+
+  const posted = loadPosted();
+
+  const stats = {
+    scanned: 0,
+  };
+
+  // SALE FIRST
+  await scanBucket(
+    'Sale',
+    posted,
+    stats
+  );
+
+  // FREE SECOND
+  await scanBucket(
+    'Free',
+    posted,
+    stats
+  );
+
+  console.log(
+    '\n================================'
+  );
+
+  console.log(
+    `Finished. Total products scanned: ${stats.scanned}`
+  );
+
+  console.log(
+    '================================'
   );
 }
 
