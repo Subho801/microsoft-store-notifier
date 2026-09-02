@@ -141,7 +141,7 @@ async function sendDiscord(game) {
 
   const embed = {
     author: {
-      name: 'Microsoft Store - Free Deals',
+      name: 'Microsoft Store - Free Games',
       icon_url: MICROSOFT_LOGO,
     },
 
