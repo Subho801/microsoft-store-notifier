@@ -150,7 +150,7 @@ async function sendDiscord(game) {
     url: game.url,
 
     description:
-      `**Deal**\n` +
+      `**🔥 Limited Time Free**\n` +
       `~~${oldPrice}~~ **FREE** (${game.badgeText || '-100%'})`,
 
     footer: {
