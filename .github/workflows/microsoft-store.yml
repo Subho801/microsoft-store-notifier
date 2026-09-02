@@ -1,10 +1,10 @@
 name: Microsoft Store Freebies
 
 on:
+  workflow_dispatch:
+
   schedule:
     - cron: '7 * * * *'
-
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -18,11 +18,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: 22
 
@@ -39,8 +39,8 @@ jobs:
           git add posted.json
 
           if git diff --cached --quiet; then
-            echo "No changes to posted.json"
+            echo "No posted.json changes."
           else
-            git commit -m "Update posted Microsoft Store games"
+            git commit -m "Update posted Microsoft Store freebies"
             git push
           fi
