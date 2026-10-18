@@ -1,0 +1,44 @@
+{
+  "source": "Microsoft Store",
+  "updated_at": "2026-10-18T13:23:48.859Z",
+  "total_found": 4,
+  "scan_complete": true,
+  "games": [
+    {
+      "id": "9p3qmg661q0p",
+      "title": "Packet Loss",
+      "url": "https://apps.microsoft.com/detail/9p3qmg661q0p",
+      "image": "https://store-images.s-microsoft.com/image/apps.4360.14533203209354722.aa15bb17-38bc-4d00-b1d8-c676fb066a62.7aaf4a47-7390-4c0d-a21c-d4c71e165bc9",
+      "original_price": "$1.79",
+      "current_price": "FREE",
+      "status": "free"
+    },
+    {
+      "id": "9ncs89mq8p5n",
+      "title": "HappyMinesweeper",
+      "url": "https://apps.microsoft.com/detail/9ncs89mq8p5n",
+      "image": "https://store-images.s-microsoft.com/image/apps.23592.13562458785324569.2f67f8ce-9e44-4100-a086-8614e46d7b7e.6149cff4-9448-49cd-b1ed-469171ce7380",
+      "original_price": "$0.99",
+      "current_price": "FREE",
+      "status": "free"
+    },
+    {
+      "id": "9mtf5qbd11g9",
+      "title": "THE AFTER LIFE, (Nella Terra Dei Morti)",
+      "url": "https://apps.microsoft.com/detail/9mtf5qbd11g9",
+      "image": "https://store-images.s-microsoft.com/image/apps.43313.13814223871949134.59e11ef2-28a4-446c-947c-14eade16b834.5090b2b4-d851-494f-92f9-ac52fa39ec60",
+      "original_price": "$4.49",
+      "current_price": "FREE",
+      "status": "free"
+    },
+    {
+      "id": "9n2hwrl05dz4",
+      "title": "Voidtrain - Big Catch",
+      "url": "https://apps.microsoft.com/detail/9n2hwrl05dz4",
+      "image": "https://store-images.s-microsoft.com/image/apps.19738.13951449709423765.794afd9e-b350-4d63-b152-b95d9aa5dbca.64f25271-08e9-4263-bde1-53876170e4eb",
+      "original_price": "$7.99",
+      "current_price": "FREE",
+      "status": "free"
+    }
+  ]
+}
