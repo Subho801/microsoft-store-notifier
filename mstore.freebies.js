@@ -1,10 +1,8 @@
-// Microsoft Store — Paid Games Temporarily Free Notifier
 
 const BASE = 'https://apps.microsoft.com/api/products/search';
 const fs = require('fs');
 
 const WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
-
 const POSTED_FILE = 'posted.json';
 
 const MICROSOFT_LOGO =
@@ -13,146 +11,169 @@ const MICROSOFT_LOGO =
 const FOOTER_LOGO =
   'https://raw.githubusercontent.com/Subho801/microsoft-store-notifier/main/assets/footer.png';
 
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+const MAX_PAGES_PER_BUCKET = 500;
+const MAX_RETRIES = 5;
+const PAGE_DELAY_MS = 900;
 
-function sessionTokenFrom(cursor) {
-  return Buffer.from(cursor, 'base64')
-    .toString('utf8')
-    .match(/s=([^&]+)/)[1];
-}
-
-function makeCursor(offset, token) {
-  return Buffer.from(`o=${offset}&b=&s=${token}`).toString('base64');
-}
-
-async function fetchPage(price, cursor, retries = 3) {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const params = new URLSearchParams({
-        query: '*',
-        mediaType: 'games',
-        age: 'all',
-        price,
-        category: 'all',
-        subscription: 'all',
-        cursor,
-        gl: 'US',
-        hl: 'en-US',
-      });
-
-      const res = await fetch(`${BASE}?${params}`, {
-        headers: {
-          Accept: 'application/json',
-          'User-Agent': 'Mozilla/5.0',
-        },
-      });
-
-      if (res.ok) {
-        return {
-          status: 200,
-          data: await res.json(),
-        };
-      }
-
-      if (res.status === 400) {
-        return {
-          status: 400,
-          data: null,
-        };
-      }
-
-      console.log(`[HTTP ${res.status}] Retrying...`);
-
-      await sleep(1000 * (i + 1));
-    } catch (err) {
-      console.log(`[REQUEST ERROR] ${err.message}`);
-
-      await sleep(1000 * (i + 1));
-    }
-  }
-
-  return {
-    status: 403,
-    data: null,
-  };
-}
-
-function isPaidNowFree(p) {
-  return (
-    p.priceInfo &&
-    Number(p.priceInfo.msrp) > 0 &&
-    Number(p.priceInfo.price) === 0
-  );
-}
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 function loadPosted() {
-  if (!fs.existsSync(POSTED_FILE)) {
-    return {};
-  }
+  if (!fs.existsSync(POSTED_FILE)) return {};
 
   try {
-    return JSON.parse(
-      fs.readFileSync(POSTED_FILE, 'utf8')
-    );
-  } catch {
-    console.log('[WARN] Could not read posted.json');
+    return JSON.parse(fs.readFileSync(POSTED_FILE, 'utf8'));
+  } catch (err) {
+    console.error('[WARN] Could not read posted.json:', err.message);
     return {};
   }
 }
 
 function savePosted(posted) {
-  fs.writeFileSync(
-    POSTED_FILE,
-    JSON.stringify(posted, null, 2)
+  const tempFile = `${POSTED_FILE}.tmp`;
+
+  fs.writeFileSync(tempFile, JSON.stringify(posted, null, 2));
+  fs.renameSync(tempFile, POSTED_FILE);
+}
+
+function isPaidNowFree(product) {
+  const info = product?.priceInfo;
+
+  return (
+    info &&
+    Number(info.msrp) > 0 &&
+    Number(info.price) === 0
   );
 }
 
 function getGameImage(product) {
-  // Prefer poster art.
-  if (product.posterArtUrl) {
-    return product.posterArtUrl;
-  }
+  if (product.posterArtUrl) return product.posterArtUrl;
+  if (product.iconUrl) return product.iconUrl;
 
-  // Fallback to icon.
-  if (product.iconUrl) {
-    return product.iconUrl;
-  }
-
-  // Fallback to the images array.
-  const image = product.images?.find(
-    img => img.url
-  );
-
+  const image = product.images?.find(item => item.url);
   return image?.url || null;
+}
+
+async function fetchPage(price, cursor = null) {
+  const params = new URLSearchParams({
+    query: '*',
+    mediaType: 'games',
+    age: 'all',
+    price,
+    category: 'all',
+    subscription: 'all',
+    gl: 'US',
+    hl: 'en-US',
+  });
+
+  // Use the cursor returned by Microsoft without reconstructing it.
+  if (cursor) {
+    params.set('cursor', cursor);
+  }
+
+  const url = `${BASE}?${params}`;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+        signal: AbortSignal.timeout(20000),
+      });
+
+      if (response.ok) {
+        return {
+          ok: true,
+          status: response.status,
+          data: await response.json(),
+        };
+      }
+
+      const retryAfter = Number(response.headers.get('retry-after'));
+      const retryable =
+        response.status === 403 ||
+        response.status === 408 ||
+        response.status === 429 ||
+        response.status >= 500;
+
+      if (!retryable) {
+        console.error(`[HTTP ${response.status}] ${price} request failed.`);
+        return {
+          ok: false,
+          status: response.status,
+          data: null,
+        };
+      }
+
+      if (attempt === MAX_RETRIES) {
+        console.error(
+          `[HTTP ${response.status}] Giving up after ${attempt} attempts.`
+        );
+
+        return {
+          ok: false,
+          status: response.status,
+          data: null,
+        };
+      }
+
+      const delay = Number.isFinite(retryAfter) && retryAfter > 0
+        ? Math.min(retryAfter * 1000, 60000)
+        : Math.min(2000 * (2 ** (attempt - 1)), 20000);
+
+      console.warn(
+        `[HTTP ${response.status}] ${price}: retry ${attempt}/${MAX_RETRIES} in ${Math.ceil(delay / 1000)}s`
+      );
+
+      await sleep(delay);
+    } catch (err) {
+      if (attempt === MAX_RETRIES) {
+        console.error(
+          `[REQUEST ERROR] ${price}: ${err.message}; retries exhausted.`
+        );
+
+        return {
+          ok: false,
+          status: 0,
+          data: null,
+        };
+      }
+
+      const delay = Math.min(2000 * (2 ** (attempt - 1)), 20000);
+
+      console.warn(
+        `[REQUEST ERROR] ${err.message}; retry ${attempt}/${MAX_RETRIES} in ${Math.ceil(delay / 1000)}s`
+      );
+
+      await sleep(delay);
+    }
+  }
+
+  return { ok: false, status: 0, data: null };
 }
 
 async function sendDiscord(game) {
   if (!WEBHOOK_URL) {
-    console.log(
-      '[ERROR] DISCORD_WEBHOOK_URL is not set.'
-    );
-
+    console.error('[ERROR] DISCORD_WEBHOOK_URL is not set.');
     return false;
   }
 
   const oldPrice =
-    game.strikeThroughPrice ||
-    `$${game.msrp}`;
+    game.strikeThroughPrice || `$${game.msrp}`;
 
   const embed = {
     author: {
       name: 'Microsoft Store - Free Games',
       icon_url: MICROSOFT_LOGO,
     },
-
     title: game.title,
-
     url: game.url,
-
     description:
       `**🔥 Limited Time Free**\n` +
       `~~${oldPrice}~~ **FREE** (${game.badgeText || '-100%'})`,
-
     footer: {
       text: "Subho's MS Store Freebie Informer",
       icon_url: FOOTER_LOGO,
@@ -160,99 +181,71 @@ async function sendDiscord(game) {
   };
 
   if (game.imageUrl) {
-    embed.image = {
-      url: game.imageUrl,
-    };
+    embed.image = { url: game.imageUrl };
   }
 
-  const payload = {
-    embeds: [embed],
-  };
-
   try {
-    const res = await fetch(WEBHOOK_URL, {
+    const response = await fetch(WEBHOOK_URL, {
       method: 'POST',
-
-      headers: {
-        'Content-Type': 'application/json',
-      },
-
-      body: JSON.stringify(payload),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ embeds: [embed] }),
+      signal: AbortSignal.timeout(20000),
     });
 
-    if (!res.ok) {
-      console.log(
-        `[DISCORD ERROR] HTTP ${res.status}`
-      );
-
+    if (!response.ok) {
+      console.error(`[DISCORD ERROR] HTTP ${response.status}: ${game.title}`);
       return false;
     }
 
-    console.log(
-      `[DISCORD] Sent: ${game.title}`
-    );
-
+    console.log(`[DISCORD] Sent: ${game.title}`);
     return true;
   } catch (err) {
-    console.log(
-      `[DISCORD ERROR] ${err.message}`
-    );
-
+    console.error(`[DISCORD ERROR] ${game.title}: ${err.message}`);
     return false;
   }
 }
 
-async function processProducts(products, posted) {
-  for (const p of products) {
-    if (!isPaidNowFree(p)) {
-      continue;
-    }
+async function processProducts(products, posted, stats) {
+  for (const product of products) {
+    if (!isPaidNowFree(product)) continue;
+
+    const productId = product.productId;
+
+    if (!productId || !product.title) continue;
 
     const game = {
-      productId: p.productId,
-      title: p.title,
-      msrp: p.priceInfo.msrp,
-      price: p.priceInfo.price,
-      badgeText: p.priceInfo.badgeText,
-      strikeThroughPrice:
-        p.priceInfo.strikeThroughPrice,
-      displayPrice:
-        p.priceInfo.displayPrice,
-      imageUrl: getGameImage(p),
-      url: `https://apps.microsoft.com/detail/${p.productId}`,
+      productId,
+      title: product.title,
+      msrp: product.priceInfo.msrp,
+      price: product.priceInfo.price,
+      badgeText: product.priceInfo.badgeText,
+      strikeThroughPrice: product.priceInfo.strikeThroughPrice,
+      imageUrl: getGameImage(product),
+      url: `https://apps.microsoft.com/detail/${productId}`,
     };
 
-    console.log(
-      `\n🎯 FOUND: ${game.title}`
-    );
-
+    console.log(`\n🎯 FOUND: ${game.title}`);
     console.log(
       `   ${game.strikeThroughPrice || `$${game.msrp}`} → FREE`
     );
 
-    // Already sent previously.
-    if (posted[game.productId]) {
-      console.log(
-        `   Already posted — skipping.`
-      );
-
+    if (posted[productId]) {
+      console.log('   Already posted — skipping.');
       continue;
     }
 
-    // SEND IMMEDIATELY.
     const sent = await sendDiscord(game);
 
     if (sent) {
-      posted[game.productId] = {
+      posted[productId] = {
         title: game.title,
         msrp: game.msrp,
         postedAt: new Date().toISOString(),
         url: game.url,
       };
 
-      // Save immediately so a later crash
-      // doesn't cause duplicate notifications.
       savePosted(posted);
+      stats.notified++;
     }
   }
 }
@@ -260,168 +253,110 @@ async function processProducts(products, posted) {
 async function scanBucket(price, posted, stats) {
   console.log(`\n========== ${price.toUpperCase()} ==========`);
 
-  let first = await fetchPage(price, '');
+  let cursor = null;
+  let pageNumber = 0;
+  let previousCursor = null;
 
-  if (!first.data) {
-    console.log(
-      `[${price}] Failed to fetch first page.`
-    );
+  while (pageNumber < MAX_PAGES_PER_BUCKET) {
+    const result = await fetchPage(price, cursor);
 
-    return;
-  }
+    if (!result.ok || !result.data) {
+      stats.incomplete = true;
 
-  let products = first.data.productsList || [];
-
-  stats.scanned += products.length;
-
-  console.log(
-    `[${price}] First page: ${products.length}`
-  );
-
-  // PROCESS IMMEDIATELY
-  await processProducts(products, posted);
-
-  let token = sessionTokenFrom(
-    first.data.cursor
-  );
-
-  let offset = 20;
-  let refreshTries = 0;
-
-  while (
-    offset < 10000 &&
-    refreshTries < 5
-  ) {
-    const result = await fetchPage(
-      price,
-      makeCursor(offset, token)
-    );
-
-    if (result.status === 400) {
-      console.log(
-        `[${price}] Microsoft pagination limit reached.`
+      console.error(
+        `[${price}] Scan incomplete at page ${pageNumber + 1}; ` +
+        `HTTP status: ${result.status}.`
       );
 
       break;
     }
 
-    if (!result.data) {
-      refreshTries++;
+    const data = result.data;
+    const products = data.productsList || [];
 
-      console.log(
-        `[${price}] Refreshing cursor ` +
-        `(${refreshTries}/5)...`
-      );
-
-      await sleep(
-        2000 * refreshTries
-      );
-
-      const fresh = await fetchPage(
-        price,
-        ''
-      );
-
-      if (!fresh.data) {
-        continue;
-      }
-
-      token = sessionTokenFrom(
-        fresh.data.cursor
-      );
-
-      continue;
-    }
-
-    refreshTries = 0;
-
-    products =
-      result.data.productsList || [];
-
-    if (products.length === 0) {
-      console.log(
-        `[${price}] No more products.`
-      );
-
-      break;
-    }
-
+    pageNumber++;
     stats.scanned += products.length;
 
-    // PROCESS THIS PAGE IMMEDIATELY.
-    await processProducts(
-      products,
-      posted
+    console.log(
+      `[${price}] Page ${pageNumber}: ${products.length} products ` +
+      `(${stats.scanned} total across buckets)`
     );
 
-    offset += 20;
+    await processProducts(products, posted, stats);
 
-    // Less noisy than the old logger.
-    if (
-      offset % 200 === 0 ||
-      products.length < 20
-    ) {
-      console.log(
-        `[${price}] Offset ${offset} — ` +
-        `${stats.scanned} scanned`
-      );
+    // An empty page usually means the current result set has ended.
+    if (products.length === 0) {
+      console.log(`[${price}] No products on this page; stopping.`);
+      break;
     }
 
-    await sleep(700);
+    // Microsoft provides the next cursor. Do not synthesize an offset.
+    const nextCursor = data.cursor || null;
+
+    if (!nextCursor) {
+      console.log(`[${price}] No next cursor; reached the end.`);
+      break;
+    }
+
+    if (nextCursor === cursor || nextCursor === previousCursor) {
+      console.warn(
+        `[${price}] Cursor did not advance. Stopping to avoid a loop.`
+      );
+      stats.incomplete = true;
+      break;
+    }
+
+    previousCursor = cursor;
+    cursor = nextCursor;
+
+    await sleep(PAGE_DELAY_MS);
   }
+
+  if (pageNumber >= MAX_PAGES_PER_BUCKET) {
+    console.warn(
+      `[${price}] Reached the ${MAX_PAGES_PER_BUCKET}-page safety limit.`
+    );
+    stats.incomplete = true;
+  }
+
+  console.log(`[${price}] Finished after ${pageNumber} page(s).`);
 }
 
 async function main() {
-  console.log(
-    'Microsoft Store Freebie Informer'
-  );
-
-  console.log(
-    '================================'
-  );
+  console.log('Microsoft Store Freebie Informer');
+  console.log('================================');
 
   if (!WEBHOOK_URL) {
-    console.log(
-      '[ERROR] DISCORD_WEBHOOK_URL is missing.'
-    );
-
-    process.exit(1);
+    console.error('[ERROR] DISCORD_WEBHOOK_URL is missing.');
+    process.exitCode = 1;
+    return;
   }
 
   const posted = loadPosted();
 
   const stats = {
     scanned: 0,
+    notified: 0,
+    incomplete: false,
   };
 
-  // SALE FIRST
-  await scanBucket(
-    'Sale',
-    posted,
-    stats
-  );
+  // Sale first, then Free.
+  await scanBucket('Sale', posted, stats);
+  await scanBucket('Free', posted, stats);
 
-  // FREE SECOND
-  await scanBucket(
-    'Free',
-    posted,
-    stats
-  );
+  console.log('\n================================');
+  console.log(`Products scanned: ${stats.scanned}`);
+  console.log(`New notifications sent: ${stats.notified}`);
+  console.log(`Scan complete: ${stats.incomplete ? 'NO — check errors above' : 'no errors reported'}`);
+  console.log('================================');
 
-  console.log(
-    '\n================================'
-  );
-
-  console.log(
-    `Finished. Total products scanned: ${stats.scanned}`
-  );
-
-  console.log(
-    '================================'
-  );
+  // A failed or truncated scan should be visible as a failed GitHub Action.
+  if (stats.incomplete) {
+    process.exitCode = 1;
+  }
 }
 
 main().catch(err => {
-  console.error(err);
-  process.exit(1);
+  console.error('[FATAL ERROR]', err);
+  process.exitCode = 1;
 });
