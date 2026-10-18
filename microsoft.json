@@ -1,7 +1,7 @@
 {
   "source": "Microsoft Store",
-  "updated_at": "2026-10-18T18:23:22.823Z",
-  "total_found": 3,
+  "updated_at": "2026-10-18T20:51:08.318Z",
+  "total_found": 4,
   "scan_complete": true,
   "games": [
     {
@@ -28,6 +28,15 @@
       "url": "https://apps.microsoft.com/detail/9mtf5qbd11g9",
       "image": "https://store-images.s-microsoft.com/image/apps.43313.13814223871949134.59e11ef2-28a4-446c-947c-14eade16b834.5090b2b4-d851-494f-92f9-ac52fa39ec60",
       "original_price": "$4.49",
+      "current_price": "FREE",
+      "status": "free"
+    },
+    {
+      "id": "9n2hwrl05dz4",
+      "title": "Voidtrain - Big Catch",
+      "url": "https://apps.microsoft.com/detail/9n2hwrl05dz4",
+      "image": "https://store-images.s-microsoft.com/image/apps.19738.13951449709423765.794afd9e-b350-4d63-b152-b95d9aa5dbca.64f25271-08e9-4263-bde1-53876170e4eb",
+      "original_price": "$7.99",
       "current_price": "FREE",
       "status": "free"
     }
