@@ -1,7 +1,7 @@
 {
   "source": "Microsoft Store",
-  "updated_at": "2026-10-20T10:14:39.318Z",
-  "total_found": 3,
+  "updated_at": "2026-10-20T15:15:19.093Z",
+  "total_found": 5,
   "scan_complete": true,
   "games": [
     {
@@ -28,6 +28,24 @@
       "url": "https://apps.microsoft.com/detail/9mtf5qbd11g9",
       "image": "https://store-images.s-microsoft.com/image/apps.43313.13814223871949134.59e11ef2-28a4-446c-947c-14eade16b834.5090b2b4-d851-494f-92f9-ac52fa39ec60",
       "original_price": "$4.49",
+      "current_price": "FREE",
+      "status": "free"
+    },
+    {
+      "id": "9pd4t3s0b75g",
+      "title": "Casino Slot",
+      "url": "https://apps.microsoft.com/detail/9pd4t3s0b75g",
+      "image": "https://store-images.s-microsoft.com/image/apps.24710.14161000907707479.d17640e7-0d6e-42a9-9580-9b368178ef7d.c3f1d011-a668-402f-bd1e-3a30b02304ef",
+      "original_price": "$1.99",
+      "current_price": "FREE",
+      "status": "free"
+    },
+    {
+      "id": "9wzdncrdbzdl",
+      "title": "Casino Poker",
+      "url": "https://apps.microsoft.com/detail/9wzdncrdbzdl",
+      "image": "https://store-images.s-microsoft.com/image/apps.22219.9007199266354649.2fb06205-d9f6-444b-a718-aa94a35868e0.9e6f8053-e35d-4e0e-9675-940efc9e1b9e",
+      "original_price": "$1.89",
       "current_price": "FREE",
       "status": "free"
     }
