@@ -1,7 +1,7 @@
 {
   "source": "Microsoft Store",
-  "updated_at": "2026-10-21T04:47:24.384Z",
-  "total_found": 5,
+  "updated_at": "2026-10-21T10:26:27.247Z",
+  "total_found": 6,
   "scan_complete": true,
   "games": [
     {
@@ -37,6 +37,15 @@
       "url": "https://apps.microsoft.com/detail/9pd4t3s0b75g",
       "image": "https://store-images.s-microsoft.com/image/apps.24710.14161000907707479.d17640e7-0d6e-42a9-9580-9b368178ef7d.c3f1d011-a668-402f-bd1e-3a30b02304ef",
       "original_price": "$1.99",
+      "current_price": "FREE",
+      "status": "free"
+    },
+    {
+      "id": "9pj1hz6pfdsj",
+      "title": "Aimlet",
+      "url": "https://apps.microsoft.com/detail/9pj1hz6pfdsj",
+      "image": "https://store-images.s-microsoft.com/image/apps.41435.14221050627823647.9834be74-2328-41fd-a54a-b210cb0d1fbf.720d6413-0958-4a42-9201-ccc495ea9737",
+      "original_price": "$0.99",
       "current_price": "FREE",
       "status": "free"
     },
