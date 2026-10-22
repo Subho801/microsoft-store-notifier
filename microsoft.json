@@ -1,7 +1,7 @@
 {
   "source": "Microsoft Store",
-  "updated_at": "2026-10-22T15:24:36.913Z",
-  "total_found": 5,
+  "updated_at": "2026-10-22T19:25:04.568Z",
+  "total_found": 4,
   "scan_complete": true,
   "games": [
     {
@@ -10,15 +10,6 @@
       "url": "https://apps.microsoft.com/detail/9ncs89mq8p5n",
       "image": "https://store-images.s-microsoft.com/image/apps.23592.13562458785324569.2f67f8ce-9e44-4100-a086-8614e46d7b7e.6149cff4-9448-49cd-b1ed-469171ce7380",
       "original_price": "$0.99",
-      "current_price": "FREE",
-      "status": "free"
-    },
-    {
-      "id": "9mtf5qbd11g9",
-      "title": "THE AFTER LIFE, (Nella Terra Dei Morti)",
-      "url": "https://apps.microsoft.com/detail/9mtf5qbd11g9",
-      "image": "https://store-images.s-microsoft.com/image/apps.43313.13814223871949134.59e11ef2-28a4-446c-947c-14eade16b834.5090b2b4-d851-494f-92f9-ac52fa39ec60",
-      "original_price": "$4.49",
       "current_price": "FREE",
       "status": "free"
     },
