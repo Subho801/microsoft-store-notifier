@@ -1,7 +1,7 @@
 {
   "source": "Microsoft Store",
-  "updated_at": "2026-10-22T23:33:08.028Z",
-  "total_found": 6,
+  "updated_at": "2026-10-23T04:55:11.039Z",
+  "total_found": 4,
   "scan_complete": true,
   "games": [
     {
@@ -32,29 +32,11 @@
       "status": "free"
     },
     {
-      "id": "9pd4t3s0b75g",
-      "title": "Casino Slot",
-      "url": "https://apps.microsoft.com/detail/9pd4t3s0b75g",
-      "image": "https://store-images.s-microsoft.com/image/apps.24710.14161000907707479.d17640e7-0d6e-42a9-9580-9b368178ef7d.c3f1d011-a668-402f-bd1e-3a30b02304ef",
-      "original_price": "$1.99",
-      "current_price": "FREE",
-      "status": "free"
-    },
-    {
       "id": "9pj1hz6pfdsj",
       "title": "Aimlet",
       "url": "https://apps.microsoft.com/detail/9pj1hz6pfdsj",
       "image": "https://store-images.s-microsoft.com/image/apps.41435.14221050627823647.9834be74-2328-41fd-a54a-b210cb0d1fbf.720d6413-0958-4a42-9201-ccc495ea9737",
       "original_price": "$0.99",
-      "current_price": "FREE",
-      "status": "free"
-    },
-    {
-      "id": "9wzdncrdbzdl",
-      "title": "Casino Poker",
-      "url": "https://apps.microsoft.com/detail/9wzdncrdbzdl",
-      "image": "https://store-images.s-microsoft.com/image/apps.22219.9007199266354649.2fb06205-d9f6-444b-a718-aa94a35868e0.9e6f8053-e35d-4e0e-9675-940efc9e1b9e",
-      "original_price": "$1.89",
       "current_price": "FREE",
       "status": "free"
     }
