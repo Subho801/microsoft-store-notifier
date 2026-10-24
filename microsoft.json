@@ -1,7 +1,7 @@
 {
   "source": "Microsoft Store",
-  "updated_at": "2026-10-24T11:03:29.333Z",
-  "total_found": 4,
+  "updated_at": "2026-10-24T14:42:55.368Z",
+  "total_found": 6,
   "scan_complete": true,
   "games": [
     {
@@ -37,6 +37,24 @@
       "url": "https://apps.microsoft.com/detail/9pj1hz6pfdsj",
       "image": "https://store-images.s-microsoft.com/image/apps.41435.14221050627823647.9834be74-2328-41fd-a54a-b210cb0d1fbf.720d6413-0958-4a42-9201-ccc495ea9737",
       "original_price": "$0.99",
+      "current_price": "FREE",
+      "status": "free"
+    },
+    {
+      "id": "9pn7mrmvkzwh",
+      "title": "Sudoku-cat",
+      "url": "https://apps.microsoft.com/detail/9pn7mrmvkzwh",
+      "image": "https://store-images.s-microsoft.com/image/apps.15006.14353838151529410.70b37602-1234-4215-a004-b98884c5da3a.46dd9fc6-ddcd-42bc-83a6-ff71edec9602",
+      "original_price": "$2.39",
+      "current_price": "FREE",
+      "status": "free"
+    },
+    {
+      "id": "9mwr1mhn7w6p",
+      "title": "Halloween 2026",
+      "url": "https://apps.microsoft.com/detail/9mwr1mhn7w6p",
+      "image": "https://store-images.s-microsoft.com/image/apps.6862.13838479320765946.5b33f00d-4411-47be-9596-c5147d15982c.a38de934-c0db-4e02-bcd5-372f6340deb1",
+      "original_price": "$3.99",
       "current_price": "FREE",
       "status": "free"
     }
