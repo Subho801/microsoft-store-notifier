@@ -1,7 +1,7 @@
 {
   "source": "Microsoft Store",
-  "updated_at": "2026-10-25T06:24:26.424Z",
-  "total_found": 6,
+  "updated_at": "2026-10-25T11:41:10.418Z",
+  "total_found": 7,
   "scan_complete": true,
   "games": [
     {
@@ -37,6 +37,15 @@
       "url": "https://apps.microsoft.com/detail/9pj1hz6pfdsj",
       "image": "https://store-images.s-microsoft.com/image/apps.41435.14221050627823647.9834be74-2328-41fd-a54a-b210cb0d1fbf.720d6413-0958-4a42-9201-ccc495ea9737",
       "original_price": "$0.99",
+      "current_price": "FREE",
+      "status": "free"
+    },
+    {
+      "id": "9p9hmlt279w4",
+      "title": "TrayCade",
+      "url": "https://apps.microsoft.com/detail/9p9hmlt279w4",
+      "image": "https://store-images.s-microsoft.com/image/apps.22949.14142584188732797.7d948c17-040f-4e81-96ca-8d58904c548c.75aa0d8c-5f8b-4039-a9d4-e8b8a20f24f4",
+      "original_price": "$6.99",
       "current_price": "FREE",
       "status": "free"
     },
