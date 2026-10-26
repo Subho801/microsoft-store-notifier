@@ -1,9 +1,18 @@
 {
   "source": "Microsoft Store",
-  "updated_at": "2026-10-26T13:03:56.960Z",
-  "total_found": 4,
+  "updated_at": "2026-10-26T19:29:19.004Z",
+  "total_found": 5,
   "scan_complete": true,
   "games": [
+    {
+      "id": "9p3qmg661q0p",
+      "title": "Packet Loss",
+      "url": "https://apps.microsoft.com/detail/9p3qmg661q0p",
+      "image": "https://store-images.s-microsoft.com/image/apps.4360.14533203209354722.aa15bb17-38bc-4d00-b1d8-c676fb066a62.7aaf4a47-7390-4c0d-a21c-d4c71e165bc9",
+      "original_price": "$1.79",
+      "current_price": "FREE",
+      "status": "free"
+    },
     {
       "id": "9ncs89mq8p5n",
       "title": "HappyMinesweeper",
