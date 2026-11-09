@@ -1,9 +1,18 @@
 {
   "source": "Microsoft Store",
-  "updated_at": "2026-11-09T06:13:27.141Z",
-  "total_found": 4,
+  "updated_at": "2026-11-09T16:17:36.058Z",
+  "total_found": 5,
   "scan_complete": true,
   "games": [
+    {
+      "id": "9p8r4p1w55qb",
+      "title": "Show do Galardão",
+      "url": "https://apps.microsoft.com/detail/9p8r4p1w55qb",
+      "image": "https://store-images.s-microsoft.com/image/apps.58652.14082612525659197.587d7645-bc36-4745-8780-93d3702cd98b.8d6134be-b680-444c-98c0-fefaa73fcd96",
+      "original_price": "$2.09",
+      "current_price": "FREE",
+      "status": "free"
+    },
     {
       "id": "9p3qmg661q0p",
       "title": "Packet Loss",
