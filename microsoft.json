@@ -1,9 +1,18 @@
 {
   "source": "Microsoft Store",
-  "updated_at": "2026-11-15T01:54:57.197Z",
-  "total_found": 5,
+  "updated_at": "2026-11-15T09:28:56.617Z",
+  "total_found": 6,
   "scan_complete": true,
   "games": [
+    {
+      "id": "9nsk039h8bk9",
+      "title": "Hangman Earth",
+      "url": "https://apps.microsoft.com/detail/9nsk039h8bk9",
+      "image": "https://store-images.s-microsoft.com/image/apps.9402.14366506506765592.9adaadde-0670-41ad-99aa-af870a5ed6c3.a2d3aea7-00d8-48ff-9d2a-6bfaf5a51f42",
+      "original_price": "$0.99",
+      "current_price": "FREE",
+      "status": "free"
+    },
     {
       "id": "9p3qmg661q0p",
       "title": "Packet Loss",
