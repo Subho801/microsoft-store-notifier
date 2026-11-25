@@ -1,6 +1,6 @@
 {
   "source": "Microsoft Store",
-  "updated_at": "2026-11-25T02:35:10.542Z",
+  "updated_at": "2026-11-25T12:54:56.381Z",
   "total_found": 6,
   "scan_complete": true,
   "games": [
@@ -23,6 +23,15 @@
       "status": "free"
     },
     {
+      "id": "9p9hmlt279w4",
+      "title": "TrayCade",
+      "url": "https://apps.microsoft.com/detail/9p9hmlt279w4",
+      "image": "https://store-images.s-microsoft.com/image/apps.22949.14142584188732797.7d948c17-040f-4e81-96ca-8d58904c548c.75aa0d8c-5f8b-4039-a9d4-e8b8a20f24f4",
+      "original_price": "$6.99",
+      "current_price": "FREE",
+      "status": "free"
+    },
+    {
       "id": "9pj1hz6pfdsj",
       "title": "Aimlet",
       "url": "https://apps.microsoft.com/detail/9pj1hz6pfdsj",
@@ -37,15 +46,6 @@
       "url": "https://apps.microsoft.com/detail/9mtf5qbd11g9",
       "image": "https://store-images.s-microsoft.com/image/apps.43313.13814223871949134.59e11ef2-28a4-446c-947c-14eade16b834.5090b2b4-d851-494f-92f9-ac52fa39ec60",
       "original_price": "$4.49",
-      "current_price": "FREE",
-      "status": "free"
-    },
-    {
-      "id": "9p9hmlt279w4",
-      "title": "TrayCade",
-      "url": "https://apps.microsoft.com/detail/9p9hmlt279w4",
-      "image": "https://store-images.s-microsoft.com/image/apps.22949.14142584188732797.7d948c17-040f-4e81-96ca-8d58904c548c.75aa0d8c-5f8b-4039-a9d4-e8b8a20f24f4",
-      "original_price": "$6.99",
       "current_price": "FREE",
       "status": "free"
     },
